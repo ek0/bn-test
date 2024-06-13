@@ -35,5 +35,4 @@ BINARYNINJAPLUGIN bool CorePluginInit() {
                               RunTests);
   return true;
 }
-
 }

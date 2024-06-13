@@ -5,7 +5,7 @@ cmake_policy(SET CMP0067 NEW)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 23)
 
-project(bn-test VERSION 0.1)
+project(bn-test VERSION 0.1 LANGUAGES CXX)
 
 if(WIN32)
 	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -28,31 +28,43 @@ FetchContent_Declare(googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-include_directories(".")
+add_library(bntest STATIC)
 
-add_library(bntest STATIC
-	# HEADERS
-	"bntest.h"
+target_sources(bntest
+	PUBLIC
+		# HEADERS
+		"${CMAKE_CURRENT_LIST_DIR}/src/bntest.h"
 
-	# SOURCE FILES
-	"bntest.cc")
+	PRIVATE
+		# SOURCE FILES
+		"${CMAKE_CURRENT_LIST_DIR}/src/bntest.cc")
 
 target_link_libraries(bntest
-	PUBLIC binaryninjaapi
+	PRIVATE binaryninjaapi
 	PUBLIC GTest::gtest_main)
+
+target_include_directories(bntest
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+		$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+install(TARGETS bntest
+	ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+	LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+	RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+)
+install(FILES "src/bntest.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if(DEFINED ENABLE_TESTING)
 	message(STATUS "Enabling bntest plugin for testing...")
 	enable_testing()
 	add_library(bntest-tests SHARED
-		"tests.cc"
+		"examples/test-plugin.cc"
 		"examples/mlil_tests.cc")
 
-	#include(GoogleTest)
-	#gtest_discover_tests(bntest-tests)
-
 	target_link_libraries(bntest-tests
-		PRIVATE bntest)
+		PRIVATE bntest
+		PRIVATE binaryninjaapi)
 
 	install(TARGETS bntest-tests DESTINATION "$ENV{APPDATA}\\Binary Ninja\\plugins")
 endif()

@@ -62,6 +62,6 @@ void InitTests() {
       new BinaryNinjaTestListener);
 }
 
-void RunTests() { RUN_ALL_TESTS(); }
+int RunTests() { return RUN_ALL_TESTS(); }
 
 }  // namespace bntest
